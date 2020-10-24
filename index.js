@@ -14,10 +14,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use("/putData", insertType);
 app.use("/getData", getData);
 
-const s3 = new AWS.S3({
-  accessKeyId: "AKIASFXITBC3GW4GLNPI",
-  secretAccessKey: "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",
-});
+
 
 const uploadFile = () => {
   fs.readFile("./CsvData/TypeData.csv", (err, data) => {
