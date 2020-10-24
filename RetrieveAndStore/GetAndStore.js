@@ -2,6 +2,11 @@ var express = require("express");
 var router = express.Router();
 var withDb = require("../MongoBridge/MongoConnect");
 const fs = require("fs");
+const AWS = require("aws-sdk");
+const dotenv = require("dotenv");
+
+//initialize dotenv
+dotenv.config();
 
 const GetRoute = router.route("/storeData");
 
@@ -11,7 +16,6 @@ var getData = (types, res) => {
     withDb(
       (collection, client) => {
         collection.find({ type: { $in: types } }).toArray((err, result) => {
-          console.log("in array", result);
           if (err) {
             reject(err);
           } else {
@@ -54,7 +58,42 @@ var createCSV = (types, typeData) => {
     });
 
     file.end(() => {
-      resolve("success");
+      //send the file name
+      resolve(fileName);
+    });
+  });
+};
+
+//configuring s3 bucket connection
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY,
+});
+
+//upload file to AWS s3 bucket
+var uploadFile = (fileName) => {
+  return new Promise((resolve, reject) => {
+    fs.readFile("./CsvData/" + fileName, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        const params = {
+          Bucket: "filestoredb", // pass your bucket name
+          Key: fileName, // file will be saved as testBucket/contacts.csv
+          Body: data,
+        };
+        s3.upload(params, function (Err, data) {
+          if (Err) {
+            reject(Err);
+          } else {
+            console.log(`File uploaded successfully at ${data.Location}`);
+
+            //removing the file node server
+            fs.unlinkSync("./CsvData/" + fileName);
+            resolve(data.Location);
+          }
+        });
+      }
     });
   });
 };
@@ -64,17 +103,20 @@ GetRoute.post(async (req, res) => {
 
   try {
     //get data from monog
-    var typeData = await getData(types, res);
+    const typeData = await getData(types, res);
 
     //convert to CSV
-    var status = await createCSV(types, typeData);
+    const fileName = await createCSV(types, typeData);
+
+    //upload file to AWS s3 bucket
+    var fileUri = await uploadFile(fileName);
   } catch (e) {
     res
-      .json({ status: "failed", message: "unable to insert Data", report: e })
+      .json({ status: "failed", message: "unable to get Data", report: e })
       .status(400);
   }
 
-  res.json({ status: "success", result: status }).status(200);
+  res.json({ status: "success", Uri: fileUri }).status(200);
 });
 
 module.exports = router;

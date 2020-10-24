@@ -29,4 +29,5 @@ AccessFiles/
 #ignoring csv file
 CsvData/
 
-
+#ignore the env file
+.env
