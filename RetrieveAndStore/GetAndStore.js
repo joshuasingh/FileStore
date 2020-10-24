@@ -2,17 +2,16 @@ var express = require("express");
 var router = express.Router();
 var withDb = require("../MongoBridge/MongoConnect");
 const fs = require("fs");
-const path = require("path");
-const { resolve } = require("path");
 
 const GetRoute = router.route("/storeData");
 
 //get all the type data from mongodb
-var getData = (res) => {
+var getData = (types, res) => {
   return new Promise((resolve, reject) => {
     withDb(
       (collection, client) => {
-        collection.find({}).toArray((err, result) => {
+        collection.find({ type: { $in: types } }).toArray((err, result) => {
+          console.log("in array", result);
           if (err) {
             reject(err);
           } else {
@@ -27,9 +26,12 @@ var getData = (res) => {
 };
 
 //create csv file of the data
-var createCSV = (typeData) => {
+var createCSV = (types, typeData) => {
   return new Promise((resolve, reject) => {
-    const storePath = __dirname + "/../CsvData/TypeData.csv";
+    const fileName =
+      "TypeData_" + types.join("_") + "_" + new Date().getTime() + ".csv";
+
+    const storePath = __dirname + "/../CsvData/" + fileName;
 
     var file = fs.createWriteStream(storePath);
     file.on("error", function (err) {
@@ -57,13 +59,15 @@ var createCSV = (typeData) => {
   });
 };
 
-GetRoute.get(async (req, res) => {
+GetRoute.post(async (req, res) => {
+  const { types } = req.body;
+
   try {
     //get data from monog
-    var typeData = await getData(res);
+    var typeData = await getData(types, res);
 
     //convert to CSV
-    var status = await createCSV(typeData);
+    var status = await createCSV(types, typeData);
   } catch (e) {
     res
       .json({ status: "failed", message: "unable to insert Data", report: e })
