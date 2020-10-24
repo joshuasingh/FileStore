@@ -3,12 +3,14 @@ var app = require("express")();
 var cors = require("cors");
 var bodyParser = require("body-parser");
 var insertType = require("./CreateData/InsertData");
+var getData = require("./RetrieveAndStore/GetAndStore");
 
 //middleware layer
 app.use(cors());
 app.use(bodyParser.json({ limit: "10mb", extended: false }));
 app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
-app.use("/data", insertType);
+app.use("/putData", insertType);
+app.use("/getData", getData);
 
 var port = process.env.Port || 8081;
 

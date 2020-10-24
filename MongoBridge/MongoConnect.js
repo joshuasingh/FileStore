@@ -14,7 +14,7 @@ const withDB = async (operations, res, collectionName) => {
 
     await operations(collection, client);
   } catch (err) {
-    console.log("error is in mongo ", res, err);
+    //console.log("error is in mongo ", res, err);
     res
       .json({
         status: "failed",

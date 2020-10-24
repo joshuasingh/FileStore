@@ -25,3 +25,8 @@ node_modules/
 
 #ignore node security files
 AccessFiles/
+
+#ignoring csv file
+CsvData/
+
+
