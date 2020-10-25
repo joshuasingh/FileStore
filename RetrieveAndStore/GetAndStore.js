@@ -77,9 +77,12 @@ var uploadFile = (fileName) => {
       if (err) {
         reject(err);
       } else {
+        //categorize folder according to the date
+        var folderName = new Date().toString().slice(0, 10);
+
         const params = {
           Bucket: "filestoredb", // pass your bucket name
-          Key: fileName, // file will be saved as testBucket/contacts.csv
+          Key: folderName + "/" + fileName,
           Body: data,
         };
         s3.upload(params, function (Err, data) {
@@ -88,7 +91,7 @@ var uploadFile = (fileName) => {
           } else {
             console.log(`File uploaded successfully at ${data.Location}`);
 
-            //removing the file node server
+            //removing the file on  server
             fs.unlinkSync("./CsvData/" + fileName);
             resolve(data.Location);
           }
@@ -112,11 +115,11 @@ GetRoute.post(async (req, res) => {
     var fileUri = await uploadFile(fileName);
   } catch (e) {
     res
-      .json({ status: "failed", message: "unable to get Data", report: e })
-      .status(400);
+      .status(500)
+      .json({ status: "failed", message: "unable to get Data", report: e });
   }
 
-  res.json({ status: "success", Uri: fileUri }).status(200);
+  res.status(200).json({ status: "success", Uri: fileUri });
 });
 
 module.exports = router;

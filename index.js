@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded({ limit: "100mb", extended: true }));
 app.use("/putData", insertType);
 app.use("/getData", getData);
 
-var port = process.env.Port || 8081;
+var port = process.env.PORT || 8081;
 
 var server = http.createServer(app);
 

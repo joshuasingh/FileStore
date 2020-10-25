@@ -25,17 +25,15 @@ var insertData = (typeData, res) => {
 insertRoute.post(async (req, res) => {
   const typeData = req.body.data;
 
-  console.log("in here", typeData);
-
   try {
-    var { ops } = await insertData(typeData, res);
+    var { insertedCount } = await insertData(typeData, res);
   } catch (e) {
     res
-      .json({ status: "failed", message: "unable to insert Data", report: e })
-      .status(400);
+      .status(500)
+      .json({ status: "failed", message: "unable to insert Data", report: e });
   }
 
-  res.json({ status: "success", result: ops }).status(200);
+  res.status(200).json({ status: "success", result: insertedCount });
 });
 
 module.exports = router;
